@@ -144,7 +144,7 @@
                                     <td><span class="badge ${u.is_approved !== false ? 'badge-green' : 'badge-red'}">${u.is_approved !== false ? 'Approved' : 'Pending'}</span></td>
                                     <td>${formatDate(u.created_at)}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline" onclick="viewEngineer('${u._id}')">Review & Badge</button>
+                                        <button class="btn btn-sm btn-outline" onclick="viewEngineer('${u.id}')">Review & Badge</button>
                                     </td>
                                 </tr>
                             `).join('')}</tbody>
@@ -171,9 +171,7 @@
                                 <p>${eng.category || 'Engineer'} • ${eng.location || 'India'} • Joined ${formatDate(eng.created_at)}</p>
                             </div>
                             <div class="approval-actions">
-                                <button class="btn btn-outline btn-sm" onclick="viewEngineer('${eng._id}')">Examine Docs</button>
-                                <button class="btn btn-success btn-sm" onclick="approveEngineer('${eng._id}', true)">Approve</button>
-                                <button class="btn btn-danger btn-sm" onclick="approveEngineer('${eng._id}', false)">Reject</button>
+                                <button class="btn btn-primary btn-sm" onclick="viewEngineer('${eng.id}')">Examine Docs & Verify</button>
                             </div>
                         </div>
                     `).join('')}
@@ -191,7 +189,7 @@
                 modal.className = 'modal-overlay';
                 modal.id = 'eng-modal';
                 modal.innerHTML = `
-                    <div class="modal-content" style="max-width:800px">
+                    <div class="modal" style="max-width:800px">
                         <div class="modal-header">
                             <div><h3>Engineer Review: ${eng.name}</h3><p>${eng.category}</p></div>
                             <button class="modal-close" onclick="closeModal()">✕</button>
@@ -216,17 +214,55 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer" style="display:flex; justify-content:space-between">
-                            <div>
-                                <button class="btn ${eng.is_verified ? 'btn-danger' : 'btn-success'}" onclick="toggleBadge('${eng._id}', ${!eng.is_verified})">
-                                    ${eng.is_verified ? 'Remove Verified Badge' : 'Award Verified Badge'}
-                                </button>
+                        <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:flex-end; gap:var(--space-md)">
+                            <div style="flex:1">
+                                <div id="rejection-ui" style="display:none; margin-bottom:var(--space-md)">
+                                    <label class="form-label">Rejection Reason</label>
+                                    <textarea id="rejection-reason" class="form-input" style="height:80px; margin-bottom:var(--space-sm)" placeholder="Enter reason for rejection..."></textarea>
+                                    <div style="display:flex; gap:var(--space-sm)">
+                                        <button class="btn btn-danger btn-sm" onclick="submitApproval('${eng.id}', false)">Confirm Rejection</button>
+                                        <button class="btn btn-outline btn-sm" onclick="toggleRejectionUI(false)">Cancel</button>
+                                    </div>
+                                </div>
+                                <div id="approval-main-actions" style="display:flex; gap:var(--space-sm)">
+                                    ${!eng.is_approved ? `
+                                        <button class="btn btn-success" onclick="submitApproval('${eng.id}', true)">Approve Engineer</button>
+                                        <button class="btn btn-danger" onclick="toggleRejectionUI(true)">Reject Engineer</button>
+                                    ` : `
+                                        <button class="btn ${eng.is_verified ? 'btn-danger' : 'btn-success'}" onclick="toggleBadge('${eng.id}', ${!eng.is_verified})">
+                                            ${eng.is_verified ? 'Remove Verified Badge' : 'Award Verified Badge'}
+                                        </button>
+                                    `}
+                                </div>
                             </div>
                             <button class="btn btn-secondary" onclick="closeModal()">Close</button>
                         </div>
                     </div>
                 `;
                 document.body.appendChild(modal);
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        function toggleRejectionUI(show) {
+            document.getElementById('rejection-ui').style.display = show ? 'block' : 'none';
+            document.getElementById('approval-main-actions').style.display = show ? 'none' : 'flex';
+        }
+
+        async function submitApproval(id, approved) {
+            const reason = approved ? '' : document.getElementById('rejection-reason').value;
+            if (!approved && !reason) {
+                showToast('Please provide a reason for rejection', 'warning');
+                return;
+            }
+            try {
+                await apiCall(`/admin/engineers/${id}/approve`, { 
+                    method: 'PUT', 
+                    body: { approved, reason } 
+                });
+                showToast(`Engineer ${approved ? 'approved' : 'rejected'} successfully`, 'success');
+                closeModal();
+                loadApprovals();
+                loadUsers();
             } catch (err) { showToast(err.message, 'error'); }
         }
 
@@ -243,13 +279,6 @@
             } catch (err) { showToast(err.message, 'error'); }
         }
 
-        async function approveEngineer(id, value) {
-            try {
-                await apiCall(`/admin/engineers/${id}/approve`, { method: 'PUT', body: { approved: value } });
-                showToast(`Engineer ${value ? 'approved' : 'rejected'}`, 'success');
-                loadApprovals();
-            } catch (err) { showToast(err.message, 'error'); }
-        }
 
         async function loadAllProjects() {
             const main = document.getElementById('main-content');

@@ -132,6 +132,7 @@ def approve_engineer(current_user_id, engineer_id):
     
     data = request.get_json()
     approved = data.get('approved', True)
+    rejection_reason = data.get('reason', '') # User call it reason or rejection_reason, I'll use reason as per common patterns or just check both.
     
     try:
         engineer = mongo.db.users.find_one({'_id': ObjectId(engineer_id), 'role': 'engineer'})
@@ -141,18 +142,42 @@ def approve_engineer(current_user_id, engineer_id):
     if not engineer:
         return jsonify({'error': 'Engineer not found'}), 404
     
-    mongo.db.users.update_one(
-        {'_id': ObjectId(engineer_id)},
-        {'$set': {'is_approved': approved, 'updated_at': datetime.utcnow()}}
-    )
+    update_data = {
+        'is_approved': approved,
+        'is_verified': approved,
+        'updated_at': datetime.utcnow()
+    }
+    
+    if approved:
+        # Add verified badge if not already there
+        mongo.db.users.update_one(
+            {'_id': ObjectId(engineer_id)},
+            {
+                '$set': update_data,
+                '$addToSet': {'badges': 'verified'}
+            }
+        )
+        msg = "Congratulations! Your profile has been verified by the admin. You now have the verified badge."
+    else:
+        # Remove verified badge if it exists
+        update_data['rejection_reason'] = rejection_reason
+        mongo.db.users.update_one(
+            {'_id': ObjectId(engineer_id)},
+            {
+                '$set': update_data,
+                '$pull': {'badges': 'verified'}
+            }
+        )
+        msg = f"Your profile verification was rejected. Reason: {rejection_reason}" if rejection_reason else "Your profile verification was rejected by the admin."
     
     # Notify engineer
     status = 'approved' if approved else 'rejected'
     notification = create_notification_document(
         ObjectId(engineer_id),
         f'profile_{status}',
-        f'Your profile has been {status} by admin',
-        '/engineer-dashboard'
+        msg,
+        '/engineer-dashboard',
+        f"Profile {status.title()}"
     )
     mongo.db.notifications.insert_one(notification)
     

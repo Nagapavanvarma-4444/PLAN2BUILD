@@ -86,6 +86,38 @@
                     <div class="dashboard-header">
                         <div><h1>Engineer Dashboard</h1><p class="subtitle">Manage your profile, proposals, and growth</p></div>
                     </div>
+
+                    ${!user.is_approved ? `
+                        <div class="dashboard-card" style="margin-bottom:var(--space-xl); border-left:4px solid var(--gold); background:rgba(212,175,55,0.1)">
+                            <div class="card-body" style="padding:var(--space-lg)">
+                                <h3 style="color:var(--gold); margin:0">Verification Pending</h3>
+                                <p style="margin:var(--space-xs) 0 0 0; font-size:0.9rem">Admin is reviewing your documents. You'll be notified once verified.</p>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${user.is_approved && !user.is_verified ? `
+                        <div class="dashboard-card" style="margin-bottom:var(--space-xl); border-left:4px solid var(--red); background:rgba(255,107,107,0.1)">
+                            <div class="card-body" style="padding:var(--space-lg)">
+                                <h3 style="color:var(--red); margin:0">Verification Rejected</h3>
+                                <p style="margin:var(--space-xs) 0 0 0; font-size:0.9rem"><strong>Reason:</strong> ${user.rejection_reason || 'Please contact support for details.'}</p>
+                                <p style="margin:var(--space-xs) 0 0 0; font-size:0.85rem; color:var(--text-muted)">Update your profile and documents to request re-verification.</p>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${user.is_verified ? `
+                        <div class="dashboard-card" style="margin-bottom:var(--space-xl); border-left:4px solid var(--green); background:rgba(81,207,102,0.1)">
+                            <div class="card-body" style="padding:var(--space-lg); display:flex; align-items:center; gap:var(--space-md)">
+                                <div style="font-size:2rem">🛡️</div>
+                                <div>
+                                    <h3 style="color:var(--green); margin:0">Verified Professional</h3>
+                                    <p style="margin:0; font-size:0.9rem">Your profile has been verified. You now have the verified badge and increased visibility!</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
                     ${sub ? `
                     <div class="subscription-card" style="margin-bottom:var(--space-2xl)">
                         <div class="plan-name">💎 ${sub.plan || 'Free'} Plan</div>

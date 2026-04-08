@@ -12,8 +12,6 @@
 ## 🚀 Overview
 **PLAN 2 BUILD** is a professional marketplace ecosystem designed to streamline the connection between property owners and vetted construction professionals. From initial concept to building approval, the platform manages projects, communications, and administrative vetting in one high-performance interface.
 
-## ✨ Core Features
-
 ### 🛠️ For Customers
 - **Project Posting**: Submit detailed construction requirements and get professional bids.
 - **Find Engineers**: Browse a curated list of vetted and certified professionals.
@@ -22,12 +20,14 @@
 ### 📐 For Engineers
 - **Professional Portfolios**: Showcase deep biographies, skills, and past projects.
 - **Vetting & Certification**: Upload professional certificates for administrative review.
-- **Verified Badging**: Earn official verified status to stand out in the marketplace.
+- **Verified Badging**: Earn official verified status with a profile badge to stand out in the marketplace.
+- **Dynamic Dashboard**: Real-time verification status monitoring and professional alerts.
 
 ### 🛡️ Administrative Suite (Central Command)
 - **Maintenance Control**: Toggle global site status with a professional "Under Construction" overlay.
-- **Document Vetting**: Detailed review system for engineer certifications.
-- **User Management**: Monitor, approve, or reject new registrations with a centralized audit logs interface.
+- **Expert Document Vetting**: Detailed review system for engineer certifications with specialized UI overlays.
+- **Advanced Verification Flow**: Approve or reject new registrations with mandatory feedback for engineers.
+- **User Management**: Monitor reliable professionals and award verified badges with a centralized audit interface.
 
 ---
 

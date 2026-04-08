@@ -6,7 +6,7 @@ Handles in-app notifications for all user types.
 from datetime import datetime
 
 
-def create_notification_document(user_id, notif_type, message, link=''):
+def create_notification_document(user_id, notif_type, message, link='', title=''):
     """
     Create a notification document for MongoDB insertion.
     
@@ -15,6 +15,7 @@ def create_notification_document(user_id, notif_type, message, link=''):
         notif_type: Notification type (proposal, message, review, subscription, admin)
         message: Notification text
         link: Optional link for the notification action
+        title: Notification heading
     
     Returns:
         dict: MongoDB-ready notification document
@@ -22,6 +23,7 @@ def create_notification_document(user_id, notif_type, message, link=''):
     return {
         'user_id': user_id,
         'type': notif_type,
+        'title': title or notif_type.replace('_', ' ').title(),
         'message': message,
         'link': link,
         'read': False,
