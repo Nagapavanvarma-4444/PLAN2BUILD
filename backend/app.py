@@ -17,13 +17,10 @@ from flask_jwt_extended import JWTManager
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_socketio import disconnect as sio_disconnect
 from flask_cors import CORS
-from flask_mail import Mail
-from bson import ObjectId
 try:
-    import razorpay
+    from bson import ObjectId
 except ImportError:
-    razorpay = None
-    print("Warning: razorpay module not available. Payment features will not work.")
+    from bson.objectid import ObjectId
 
 from config import Config
 
@@ -35,24 +32,16 @@ app.config.from_object(Config)
 
 # Extensions
 CORS(app, resources={r"/api/*": {
-    "origins": "*",
+    "origins": [Config.FRONTEND_URL, "http://localhost:5000", "http://localhost:3000", "*"],
     "allow_headers": ["Authorization", "Content-Type"],
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }})
 mongo = PyMongo(app)
 jwt = JWTManager(app)
-mail = Mail(app)
 
 # JWT locations to support token in FormData if header is blocked
 app.config["JWT_TOKEN_LOCATION"] = ["headers", "query_string", "json"]
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
-
-# Razorpay client (initialized with keys, may fail if keys not set)
-try:
-    razorpay_client = razorpay.Client(auth=(Config.RAZORPAY_KEY_ID, Config.RAZORPAY_KEY_SECRET))
-except:
-    razorpay_client = None
-    print("Warning: Razorpay not configured. Payment features will not work.")
 
 
 # ===========================
@@ -407,14 +396,16 @@ if __name__ == '__main__':
 
     print(f"""
 ============================================
-  PLAN 2 BUILD Server
-  Professional Construction Marketplace
+  PLAN 2 BUILD - Backend Service
+  Status:   ACTIVE (Demo Mode)
 --------------------------------------------
-  API:      http://localhost:{port}/api
-  Frontend: http://localhost:{port}
-  Debug:    {debug}
+  Local:    http://localhost:{port}
+  Network:  Accessible via your server IP
+  Frontend: Auto-detected (window.origin)
 ============================================
     """)
 
-    socketio.run(app, host='0.0.0.0', port=port, debug=debug, allow_unsafe_werkzeug=True)
+    # Production mode: Use the PORT provided by the environment, or default to 5000
+    host = '0.0.0.0'
+    socketio.run(app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
 

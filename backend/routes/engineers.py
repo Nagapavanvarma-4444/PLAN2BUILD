@@ -10,7 +10,6 @@ from datetime import datetime
 from middleware.auth_middleware import token_required, role_required
 from models.user import calculate_profile_completion, ENGINEER_CATEGORIES
 from utils.helpers import serialize_doc, paginate_query
-from utils.cloudinary_upload import upload_image, upload_file, validate_file_extension
 
 engineers_bp = Blueprint('engineers', __name__)
 
@@ -27,8 +26,8 @@ def list_engineers():
     query = {
         'role': 'engineer',
         'is_approved': True,
-        'is_active': True,
-        'subscription.status': 'active'  # Only show subscribed engineers
+        'is_active': True
+        # 'subscription.status': 'active' - Removed for demo mode
     }
     
     # Category filter
@@ -180,100 +179,24 @@ def update_profile(current_user_id):
 @engineers_bp.route('/avatar', methods=['POST'])
 @token_required
 def upload_avatar(current_user_id):
-    """Upload profile avatar image."""
-    from app import mongo
-    
-    if 'avatar' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
-    
-    file = request.files['avatar']
-    if not validate_file_extension(file.filename, {'jpg', 'jpeg', 'png', 'webp'}):
-        return jsonify({'error': 'Invalid file type. Use JPG, PNG, or WebP'}), 400
-    
-    result = upload_image(file, folder='plan2build/avatars')
-    if not result:
-        return jsonify({'error': 'Upload failed'}), 500
-    
-    mongo.db.users.update_one(
-        {'_id': ObjectId(current_user_id)},
-        {'$set': {'avatar': result['url'], 'updated_at': datetime.utcnow()}}
-    )
-    
-    return jsonify({'message': 'Avatar uploaded', 'url': result['url']}), 200
+    """Avatar upload disabled in deep cleanup mode."""
+    return jsonify({'error': 'Feature disabled in demo mode.'}), 501
 
 
 @engineers_bp.route('/portfolio', methods=['POST'])
 @token_required
 @role_required('engineer')
 def add_portfolio_item(current_user_id):
-    """Add a portfolio item (image + description)."""
-    from app import mongo
-    
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image uploaded'}), 400
-    
-    file = request.files['image']
-    if not validate_file_extension(file.filename, {'jpg', 'jpeg', 'png', 'webp'}):
-        return jsonify({'error': 'Invalid file type'}), 400
-    
-    result = upload_image(file, folder='plan2build/portfolio')
-    if not result:
-        return jsonify({'error': 'Upload failed'}), 500
-    
-    portfolio_item = {
-        'title': request.form.get('title', ''),
-        'description': request.form.get('description', ''),
-        'image_url': result['url'],
-        'public_id': result['public_id'],
-        'created_at': datetime.utcnow().isoformat()
-    }
-    
-    mongo.db.users.update_one(
-        {'_id': ObjectId(current_user_id)},
-        {'$push': {'portfolio': portfolio_item}}
-    )
-    
-    return jsonify({'message': 'Portfolio item added', 'item': portfolio_item}), 201
+    """Portfolio item upload disabled in deep cleanup mode."""
+    return jsonify({'error': 'Feature disabled in demo mode.'}), 501
 
 
 @engineers_bp.route('/certifications', methods=['POST'])
 @token_required
 @role_required('engineer')
 def add_certification(current_user_id):
-    """Upload a certification document."""
-    from app import mongo
-    
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
-    
-    file = request.files['file']
-    if not validate_file_extension(file.filename, {'pdf', 'jpg', 'jpeg', 'png'}):
-        return jsonify({'error': 'Invalid file type. Use PDF, JPG, or PNG'}), 400
-    
-    # Upload as raw file if PDF, image otherwise
-    ext = file.filename.rsplit('.', 1)[1].lower()
-    if ext == 'pdf':
-        result = upload_file(file, folder='plan2build/certifications')
-    else:
-        result = upload_image(file, folder='plan2build/certifications')
-    
-    if not result:
-        return jsonify({'error': 'Upload failed'}), 500
-    
-    cert_item = {
-        'name': request.form.get('name', file.filename),
-        'file_url': result['url'],
-        'public_id': result['public_id'],
-        'verified': False,  # Requires admin verification
-        'uploaded_at': datetime.utcnow().isoformat()
-    }
-    
-    mongo.db.users.update_one(
-        {'_id': ObjectId(current_user_id)},
-        {'$push': {'certifications': cert_item}}
-    )
-    
-    return jsonify({'message': 'Certification uploaded (pending verification)', 'certification': cert_item}), 201
+    """Certification upload disabled in deep cleanup mode."""
+    return jsonify({'error': 'Feature disabled in demo mode.'}), 501
 
 
 @engineers_bp.route('/featured', methods=['GET'])
@@ -286,8 +209,8 @@ def get_featured_engineers():
             'role': 'engineer',
             'is_approved': True,
             'is_active': True,
-            'is_featured': True,
-            'subscription.status': 'active'
+            'is_featured': True
+            # 'subscription.status': 'active' - Removed for demo mode
         },
         {'password_hash': 0, 'verification_token': 0, 'reset_token': 0}
     ).sort('avg_rating', -1).limit(6)

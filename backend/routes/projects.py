@@ -10,7 +10,6 @@ from datetime import datetime
 from middleware.auth_middleware import token_required, role_required
 from models.project import create_project_document, SERVICE_CATEGORIES
 from utils.helpers import serialize_doc, paginate_query
-from utils.cloudinary_upload import upload_file, validate_file_extension
 
 projects_bp = Blueprint('projects', __name__)
 
@@ -171,41 +170,8 @@ def update_project(current_user_id, project_id):
 @token_required
 @role_required('customer')
 def upload_project_file(current_user_id, project_id):
-    """Upload plan files to a project."""
-    from app import mongo
-    
-    # Verify project ownership
-    project = mongo.db.projects.find_one({
-        '_id': ObjectId(project_id),
-        'customer_id': ObjectId(current_user_id)
-    })
-    if not project:
-        return jsonify({'error': 'Project not found or access denied'}), 404
-    
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
-    
-    file = request.files['file']
-    if not validate_file_extension(file.filename, {'pdf', 'jpg', 'jpeg', 'png', 'dwg'}):
-        return jsonify({'error': 'Invalid file type'}), 400
-    
-    result = upload_file(file, folder='plan2build/project-files')
-    if not result:
-        return jsonify({'error': 'Upload failed'}), 500
-    
-    file_info = {
-        'filename': file.filename,
-        'file_url': result['url'],
-        'public_id': result['public_id'],
-        'uploaded_at': datetime.utcnow().isoformat()
-    }
-    
-    mongo.db.projects.update_one(
-        {'_id': ObjectId(project_id)},
-        {'$push': {'plan_files': file_info}}
-    )
-    
-    return jsonify({'message': 'File uploaded', 'file': file_info}), 201
+    """Project file upload disabled in deep cleanup mode."""
+    return jsonify({'error': 'Feature disabled in demo mode.'}), 501
 
 
 @projects_bp.route('/my', methods=['GET'])

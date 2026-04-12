@@ -20,7 +20,6 @@ auth_bp = Blueprint('auth', __name__)
 def register():
     """Register a new user (customer or engineer)."""
     from app import mongo
-    from utils.cloudinary_upload import upload_image, validate_file_extension
     
     # Check if request is multipart (FormData) or JSON
     if request.mimetype == 'multipart/form-data':
@@ -65,19 +64,8 @@ def register():
     password_hash = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     data['password_hash'] = password_hash
     
-    # Handle certificate uploads for engineers
+    # Certificate uploads disabled for deep cleanup (demo mode)
     certifications = []
-    if data['role'] == 'engineer' and files:
-        for file in files[:3]: # Max 3 certs
-            if validate_file_extension(file.filename, {'pdf', 'jpg', 'jpeg', 'png'}):
-                result = upload_image(file, folder='plan2build/certificates')
-                if result:
-                    certifications.append({
-                        'name': file.filename,
-                        'url': result['url'],
-                        'verified': False,
-                        'uploaded_at': datetime.utcnow()
-                    })
 
     # Create user document
     user_doc = create_user_document(data, role=data['role'])
@@ -194,8 +182,8 @@ def verify_email():
 
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
-    """Send password reset email."""
-    from app import mongo, mail
+    """Simulate password reset email for demo."""
+    from app import mongo
     
     data = request.get_json()
     email = data.get('email', '').lower().strip()
@@ -217,13 +205,8 @@ def forgot_password():
         {'$set': {'reset_token': reset_token, 'reset_token_expiry': expiry}}
     )
     
-    # Send reset email
-    try:
-        from utils.email_service import send_password_reset_email
-        from config import Config
-        send_password_reset_email(mail, email, reset_token, Config.FRONTEND_URL)
-    except Exception as e:
-        print(f"Warning: Could not send reset email: {e}")
+    # Email sending disabled for deep cleanup (demo mode)
+    print(f"[DEMO] Password reset link for {email}: {reset_token}")
     
     return jsonify({'message': 'If the email exists, a reset link will be sent'}), 200
 
@@ -368,24 +351,5 @@ def update_profile(current_user_id):
 @auth_bp.route('/avatar', methods=['POST'])
 @token_required
 def upload_avatar(current_user_id):
-    """Upload profile avatar image."""
-    from app import mongo
-    from utils.cloudinary_upload import upload_image, validate_file_extension
-    
-    if 'avatar' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
-    
-    file = request.files['avatar']
-    if not validate_file_extension(file.filename, {'jpg', 'jpeg', 'png', 'webp'}):
-        return jsonify({'error': 'Invalid file type. Use JPG, PNG, or WebP'}), 400
-    
-    result = upload_image(file, folder='plan2build/avatars')
-    if not result:
-        return jsonify({'error': 'Upload failed'}), 500
-    
-    mongo.db.users.update_one(
-        {'_id': ObjectId(current_user_id)},
-        {'$set': {'avatar': result['url'], 'updated_at': datetime.utcnow()}}
-    )
-    
-    return jsonify({'message': 'Avatar uploaded', 'url': result['url']}), 200
+    """Avatar upload disabled in deep cleanup mode."""
+    return jsonify({'error': 'Avatar upload is currently disabled. Please use default profile icons.'}), 501

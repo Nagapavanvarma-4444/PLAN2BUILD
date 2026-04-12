@@ -46,11 +46,6 @@ def send_proposal(current_user_id):
     if existing:
         return jsonify({'error': 'You have already submitted a proposal for this project'}), 409
     
-    # TEMPORARY: Bypassing subscription check for presentation/demo purposes
-    # engineer = mongo.db.users.find_one({'_id': ObjectId(current_user_id)})
-    # if not engineer or engineer.get('subscription', {}).get('status') != 'active':
-    #     return jsonify({'error': 'Active subscription required to send proposals'}), 403
-    
     # Create proposal
     proposal_doc = create_proposal_document(data, ObjectId(current_user_id), ObjectId(project_id))
     result = mongo.db.proposals.insert_one(proposal_doc)

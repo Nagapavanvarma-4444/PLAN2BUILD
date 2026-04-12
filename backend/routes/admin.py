@@ -34,33 +34,6 @@ def get_dashboard_stats(current_user_id):
         'is_approved': False
     })
     
-    # Active subscriptions
-    active_subscriptions = mongo.db.users.count_documents({
-        'role': 'engineer',
-        'subscription.status': 'active'
-    })
-    
-    # Revenue (from payments)
-    revenue_pipeline = [
-        {'$match': {'status': 'completed'}},
-        {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
-    ]
-    revenue = list(mongo.db.payments.aggregate(revenue_pipeline))
-    total_revenue = revenue[0]['total'] if revenue else 0
-    
-    # Recent signups (last 30 days)
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    recent_signups = mongo.db.users.count_documents({
-        'created_at': {'$gte': thirty_days_ago}
-    })
-    
-    # Subscription breakdown
-    sub_breakdown = {
-        'basic': mongo.db.users.count_documents({'subscription.plan': 'basic', 'subscription.status': 'active'}),
-        'professional': mongo.db.users.count_documents({'subscription.plan': 'professional', 'subscription.status': 'active'}),
-        'premium': mongo.db.users.count_documents({'subscription.plan': 'premium', 'subscription.status': 'active'})
-    }
-    
     return jsonify({
         'stats': {
             'total_users': total_users,
@@ -69,10 +42,10 @@ def get_dashboard_stats(current_user_id):
             'total_projects': total_projects,
             'total_proposals': total_proposals,
             'pending_approvals': pending_approvals,
-            'active_subscriptions': active_subscriptions,
-            'total_revenue': total_revenue,
-            'recent_signups': recent_signups,
-            'subscription_breakdown': sub_breakdown
+            'active_subscriptions': 0,
+            'total_revenue': 0,
+            'recent_signups': total_users, # Placeholder
+            'subscription_breakdown': {'basic': 0, 'professional': 0, 'premium': 0}
         }
     }), 200
 

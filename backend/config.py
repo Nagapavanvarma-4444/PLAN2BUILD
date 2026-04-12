@@ -10,6 +10,14 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
+"""
+DEPLOYMENT NOTE:
+When deploying to a production server (like Render, AWS, or Heroku), ensure you set
+the following Environment Variables in your hosting dashboard:
+1. FLASK_SECRET_KEY & JWT_SECRET_KEY (Generate strong random keys)
+2. MONGO_URI (Your production MongoDB Atlas string)
+3. FRONTEND_URL (The actual URL of your deployed site, e.g., https://your-site.com)
+"""
 
 class Config:
     """Base configuration class."""
@@ -30,31 +38,6 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(
         seconds=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 86400))
     )
-
-    # Cloudinary
-    CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', '')
-    CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', '')
-    CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', '')
-
-    # Razorpay
-    RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
-    RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
-
-    # Twilio (SMS)
-    TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', 'placeholder')
-    TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', 'placeholder')
-    TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', 'placeholder')
-
-    # Clerk (OTP Service)
-    CLERK_SECRET_KEY = os.getenv('CLERK_SECRET_KEY', 'placeholder')
-
-    # Mail
-    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
-    MAIL_USERNAME = os.getenv('MAIL_USERNAME', '')
-    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', '')
-    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', '')
 
     # Frontend URL (for CORS and email links)
     FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5000')
