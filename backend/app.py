@@ -8,11 +8,15 @@ Entry point for the Flask backend with Socket.IO real-time messaging.
 Serves both API routes and frontend static files.
 """
 
-import eventlet
-eventlet.monkey_patch()
-
 import os
 import sys
+
+# Ensure the backend directory is on sys.path so 'config' module is always findable,
+# regardless of whether the app is run directly or via gunicorn/wsgi.
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 from datetime import datetime
 from flask import Flask, send_from_directory, jsonify, request, url_for
 from flask_pymongo import PyMongo
