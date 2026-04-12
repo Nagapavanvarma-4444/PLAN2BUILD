@@ -94,7 +94,9 @@ def serve_frontend(path):
 
 
 @app.route('/api/health')
-def health_check():
+@app.route('/healthz')
+@app.route('/health')
+def health_check_api():
     """API health check endpoint."""
     return jsonify({
         'status': 'healthy',
@@ -141,10 +143,7 @@ def serve_uploads(filename):
 
 
 # ===========================
-# Health check route for cloud deployment
-@app.route('/healthz')
-def health_check():
-    return jsonify({'status': 'healthy'}), 200
+
 
 # Error handlers
 # ===========================
