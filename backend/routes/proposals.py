@@ -46,10 +46,10 @@ def send_proposal(current_user_id):
     if existing:
         return jsonify({'error': 'You have already submitted a proposal for this project'}), 409
     
-    # Check subscription status
-    engineer = mongo.db.users.find_one({'_id': ObjectId(current_user_id)})
-    if not engineer or engineer.get('subscription', {}).get('status') != 'active':
-        return jsonify({'error': 'Active subscription required to send proposals'}), 403
+    # TEMPORARY: Bypassing subscription check for presentation/demo purposes
+    # engineer = mongo.db.users.find_one({'_id': ObjectId(current_user_id)})
+    # if not engineer or engineer.get('subscription', {}).get('status') != 'active':
+    #     return jsonify({'error': 'Active subscription required to send proposals'}), 403
     
     # Create proposal
     proposal_doc = create_proposal_document(data, ObjectId(current_user_id), ObjectId(project_id))
@@ -174,7 +174,8 @@ def update_proposal_status(current_user_id, proposal_id):
         proposal['engineer_id'],
         f'proposal_{new_status}',
         f'Your proposal for "{project["title"]}" has been {new_status}',
-        f'/project/{str(proposal["project_id"])}'
+        f'/project/{str(proposal["project_id"])}',
+        related_user_id=ObjectId(current_user_id) # The customer
     )
     mongo.db.notifications.insert_one(notification)
     
@@ -204,7 +205,10 @@ def get_my_proposals(current_user_id):
     for prop in proposals:
         prop_data = serialize_doc(prop)
         # Get project info
-        project = mongo.db.projects.find_one({'_id': prop['project_id']}, {'title': 1, 'category': 1, 'location': 1, 'budget_min': 1, 'budget_max': 1})
+        project = mongo.db.projects.find_one(
+            {'_id': prop['project_id']}, 
+            {'title': 1, 'category': 1, 'location': 1, 'budget_min': 1, 'budget_max': 1, 'customer_id': 1}
+        )
         if project:
             prop_data['project'] = serialize_doc(project)
         proposals_list.append(prop_data)

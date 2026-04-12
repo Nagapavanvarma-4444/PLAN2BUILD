@@ -120,8 +120,8 @@
         async function openChatWith(userId) {
             // When directed from another page, fetch user info and open chat
             try {
-                const data = await apiCall(`/engineers/${userId}`);
-                openChat(userId, data.engineer.name, data.engineer.avatar || '');
+                const data = await apiCall(`/auth/users/${userId}`);
+                openChat(userId, data.user.name, data.user.avatar || '');
             } catch (e) {
                 openChat(userId, 'User', '');
             }

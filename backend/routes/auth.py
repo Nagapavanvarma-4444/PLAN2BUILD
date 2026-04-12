@@ -271,6 +271,22 @@ def reset_password():
     return jsonify({'message': 'Password reset successful'}), 200
 
 
+@auth_bp.route('/users/<user_id>', methods=['GET'])
+@token_required
+def get_user_info(current_user_id, user_id):
+    """Get public information of any user."""
+    from app import mongo
+    
+    user = mongo.db.users.find_one(
+        {'_id': ObjectId(user_id)},
+        {'name': 1, 'avatar': 1, 'role': 1, 'category': 1}
+    )
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+        
+    return jsonify({'user': serialize_doc(user)}), 200
+
+
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():
     """Get current authenticated user's profile."""

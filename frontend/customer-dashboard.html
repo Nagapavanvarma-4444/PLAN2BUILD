@@ -78,7 +78,7 @@
             const main = document.getElementById('main-content');
             try {
                 const [projects, notifs] = await Promise.all([
-                    apiCall('/projects/my-projects').catch(() => ({ projects: [] })),
+                    apiCall('/projects/my').catch(() => ({ projects: [] })),
                     apiCall('/notifications?limit=5').catch(() => ({ notifications: [] }))
                 ]);
                 const projList = projects.projects || [];
@@ -118,7 +118,10 @@
                                         <h4 style="font-size:0.9rem">${n.title}</h4>
                                         <p style="font-size:0.8rem;color:var(--text-muted)">${n.message}</p>
                                     </div>
-                                    <span style="font-size:0.75rem;color:var(--text-muted)">${timeAgo(n.created_at)}</span>
+                                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                                        <span style="font-size:0.75rem;color:var(--text-muted)">${timeAgo(n.created_at)}</span>
+                                        ${n.related_user_id ? `<a href="/messages.html?to=${n.related_user_id}" class="btn btn-outline btn-sm" style="padding:4px 8px;font-size:0.7rem">💬 Message</a>` : ''}
+                                    </div>
                                 </div>
                             `).join('')}</div>
                         </div>
@@ -132,7 +135,7 @@
         async function loadProjects() {
             const main = document.getElementById('main-content');
             try {
-                const data = await apiCall('/projects/my-projects');
+                const data = await apiCall('/projects/my');
                 const projects = data.projects || [];
                 main.innerHTML = `
                     <div class="dashboard-header">
@@ -164,12 +167,12 @@
         async function loadProposals() {
             const main = document.getElementById('main-content');
             try {
-                const projData = await apiCall('/projects/my-projects');
+                const projData = await apiCall('/projects/my');
                 const projects = projData.projects || [];
                 let allProposals = [];
                 for (const p of projects.slice(0, 10)) {
                     try {
-                        const propData = await apiCall(`/proposals/project/${p._id}`);
+                        const propData = await apiCall(`/proposals/project/${p.id}`);
                         (propData.proposals || []).forEach(prop => { prop._project_title = p.title; });
                         allProposals = allProposals.concat(propData.proposals || []);
                     } catch (e) { }
@@ -183,18 +186,23 @@
                                 <div class="avatar">${(prop.engineer_name || 'E').charAt(0)}</div>
                                 <div class="proposal-content">
                                     <h4>${prop.engineer_name || 'Engineer'} → ${prop._project_title}</h4>
-                                    <p>${prop.cover_letter ? prop.cover_letter.substring(0, 120) + '...' : ''}</p>
+                                    <p>${prop.message ? prop.message.substring(0, 120) + '...' : ''}</p>
                                     <div class="project-meta">
-                                        <span>💰 ${formatCurrency(prop.price || 0)}</span>
-                                        <span>⏰ ${prop.timeline || 'Flexible'}</span>
+                                        <span>💰 ${formatCurrency(prop.proposed_price || 0)}</span>
+                                        <span>⏰ ${prop.proposed_timeline || 'Flexible'}</span>
                                         <span>${timeAgo(prop.created_at)}</span>
                                     </div>
                                 </div>
                                 <div class="proposal-actions">
                                     ${prop.status === 'pending' ? `
-                                        <button class="btn btn-success btn-sm" onclick="handleProposal('${prop._id}', 'accepted')">Accept</button>
-                                        <button class="btn btn-danger btn-sm" onclick="handleProposal('${prop._id}', 'rejected')">Reject</button>
-                                    ` : `<span class="badge ${prop.status === 'accepted' ? 'badge-green' : 'badge-red'}">${prop.status}</span>`}
+                                        <button class="btn btn-success btn-sm" onclick="handleProposal('${prop.id}', 'accepted')">Accept</button>
+                                        <button class="btn btn-danger btn-sm" onclick="handleProposal('${prop.id}', 'rejected')">Reject</button>
+                                    ` : `
+                                        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+                                            <span class="badge ${prop.status === 'accepted' ? 'badge-green' : 'badge-red'}">${prop.status}</span>
+                                            ${prop.status === 'accepted' ? `<a href="/messages.html?to=${prop.engineer_id}" class="btn btn-outline btn-sm">💬 Message</a>` : ''}
+                                        </div>
+                                    `}
                                 </div>
                             </div>
                         `).join('')}</div>
