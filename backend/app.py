@@ -141,7 +141,12 @@ def serve_uploads(filename):
 
 
 # ===========================
-# JWT Error Handlers
+# Health check route for cloud deployment
+@app.route('/healthz')
+def health_check():
+    return jsonify({'status': 'healthy'}), 200
+
+# Error handlers
 # ===========================
 @jwt.expired_token_loader
 def expired_token_callback(jwt_header, jwt_payload):
